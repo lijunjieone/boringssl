@@ -2,6 +2,8 @@ build/
 cmbuild/
 ssl/test/runner/runner
 *.swp
+**/.DS_Store
+**/.vscode
 *.swo
 doc/*.html
 doc/doc.css
