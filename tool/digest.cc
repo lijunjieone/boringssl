@@ -450,6 +450,9 @@ static bool DigestSum(const EVP_MD *md,
 
   return ok;
 }
+bool MD4Sum(const std::vector<std::string> &args) {
+  return DigestSum(EVP_md4(),args);
+}
 
 bool MD5Sum(const std::vector<std::string> &args) {
   return DigestSum(EVP_md5(), args);

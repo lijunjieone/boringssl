@@ -1,4 +1,5 @@
 build/
+cmbuild/
 ssl/test/runner/runner
 *.swp
 *.swo

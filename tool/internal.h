@@ -73,6 +73,7 @@ bool DoPKCS12(const std::vector<std::string> &args);
 bool GenerateEd25519Key(const std::vector<std::string> &args);
 bool GenerateRSAKey(const std::vector<std::string> &args);
 bool MD5Sum(const std::vector<std::string> &args);
+bool MD4Sum(const std::vector<std::string> &args);
 bool Rand(const std::vector<std::string> &args);
 bool SHA1Sum(const std::vector<std::string> &args);
 bool SHA224Sum(const std::vector<std::string> &args);

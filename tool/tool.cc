@@ -48,6 +48,7 @@ static const Tool kTools[] = {
   { "generate-ed25519", GenerateEd25519Key },
   { "genrsa", GenerateRSAKey },
   { "md5sum", MD5Sum },
+  { "md4sum", MD4Sum },
   { "pkcs12", DoPKCS12 },
   { "rand", Rand },
   { "s_client", Client },
