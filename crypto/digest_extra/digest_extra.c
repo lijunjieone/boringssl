@@ -74,6 +74,7 @@ struct nid_to_digest {
 };
 
 static const struct nid_to_digest nid_to_digest_mapping[] = {
+    // {NID_sm3, EVP_sm3, SN_sm3, LN_sm3},
     {NID_md4, EVP_md4, SN_md4, LN_md4},
     {NID_md5, EVP_md5, SN_md5, LN_md5},
     {NID_sha1, EVP_sha1, SN_sha1, LN_sha1},
@@ -122,6 +123,8 @@ static const struct {
   uint8_t oid_len;
   const EVP_MD *(*md_func) (void);
 } kMDOIDs[] = {
+  /* 1 2 156 10197 1 401 */
+  // { {0x2A,0x81,0x1C,0xCF,0x55,0x01,0x83,0x11}, 8, EVP_sm3 },
   /* 1.2.840.113549.2.4 */
   { {0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x02, 0x04}, 8, EVP_md4 },
   /* 1.2.840.113549.2.5 */

@@ -4198,6 +4198,11 @@ extern "C" {
 #define NID_ED25519 949
 #define OBJ_ED25519 1L, 3L, 101L, 112L
 
+#define SN_sm3 "SM3"
+#define LN_sm3 "sm3"
+#define NID_sm3 950
+#define OBJ_sm3 1L, 2L, 156L, 10197L, 1L, 401L
+
 
 #if defined(__cplusplus)
 } /* extern C */
