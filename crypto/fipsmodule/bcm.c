@@ -73,6 +73,7 @@
 #include "ec/util-64.c"
 #include "ec/wnaf.c"
 #include "hmac/hmac.c"
+#include "sm3/sm3.c"
 #include "md4/md4.c"
 #include "md5/md5.c"
 #include "modes/cbc.c"

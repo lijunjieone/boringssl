@@ -1254,6 +1254,11 @@ extern "C" {
 #define NID_md4 257
 #define OBJ_md4 1L, 2L, 840L, 113549L, 2L, 4L
 
+#define SN_sm3 "SM3"
+#define LN_sm3 "sm3"
+#define NID_sm3 950
+#define OBJ_sm3 1L, 2L, 156L, 10197L, 1L, 401L
+
 #define SN_id_pkix_mod "id-pkix-mod"
 #define NID_id_pkix_mod 258
 #define OBJ_id_pkix_mod 1L, 3L, 6L, 1L, 5L, 5L, 7L, 0L
