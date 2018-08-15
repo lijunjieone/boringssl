@@ -451,9 +451,9 @@ static bool DigestSum(const EVP_MD *md,
   return ok;
 }
 
-// bool SM3Sum(const std::vector<std::string> &args) {
-//   return DigestSum(EVP_md4(),args);
-// }
+bool SM3Sum(const std::vector<std::string> &args) {
+  return DigestSum(EVP_sm3(),args);
+}
 bool MD4Sum(const std::vector<std::string> &args) {
   return DigestSum(EVP_md4(),args);
 }

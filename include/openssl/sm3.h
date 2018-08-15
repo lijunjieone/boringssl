@@ -66,19 +66,30 @@
 extern "C" {
 #endif
 
-# define SM3_LONG   uint32_t
 # define SM3_DIGEST_LENGTH   32
 # define SM3_LBLOCK          16
 # define SM3_CBLOCK          64
 
+
+
+
+/* SM3_Init initialises |sm3| and returns one. */
 OPENSSL_EXPORT int SM3_Init(SM3_CTX *sm3);
 
+/* SM3_Update adds |len| bytes from |data| to |sm3| and returns one. */
 OPENSSL_EXPORT int SM3_Update(SM3_CTX *sm3, const void *data, size_t len);
 
+/* SM3_Final adds the final padding to |SM3| and writes the resulting digest to
+ * |md|, which must have at least |SM3_DIGEST_LENGTH| bytes of space. It
+ * returns one. */
 OPENSSL_EXPORT int SM3_Final(uint8_t *md, SM3_CTX *sm3);
 
+/* SM3 writes the digest of |len| bytes from |data| to |out| and returns |out|.
+ * There must be at least |SM3_DIGEST_LENGTH| bytes of space in |out|. */
 OPENSSL_EXPORT uint8_t *SM3(const uint8_t *data, size_t len, uint8_t *out);
 
+/* SM3_Transform is a low-level function that performs a single, SM3 block
+ * transformation using the state from |SM3| and 64 bytes from |block|. */
 OPENSSL_EXPORT void SM3_Transform(SM3_CTX *sm3, const uint8_t *block);
 
 struct sm3_state_st {
@@ -91,5 +102,6 @@ struct sm3_state_st {
 #if defined(__cplusplus)
 }  /* extern C */
 #endif
+
 
 #endif  /* OPENSSL_HEADER_SM3_H */
