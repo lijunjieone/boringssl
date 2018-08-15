@@ -63,11 +63,15 @@
 extern "C" {
 #endif
 
+# define SM3_DIGEST_LENGTH   32
+# define SM3_LBLOCK          16
+# define SM3_CBLOCK          64
+
 
 /* MD4. */
 
 /* MD4_CBLOCK is the block size of MD4. */
-#define MD4_CBLOCK 64
+#define MD4_CBLOCK 32
 
 /* MD4_DIGEST_LENGTH is the length of an MD4 digest. */
 #define MD4_DIGEST_LENGTH 16
@@ -92,7 +96,7 @@ OPENSSL_EXPORT uint8_t *MD4(const uint8_t *data, size_t len, uint8_t *out);
 OPENSSL_EXPORT void MD4_Transform(MD4_CTX *md4, const uint8_t *block);
 
 struct md4_state_st {
-  uint32_t h[4];
+  uint32_t h[8];
   uint32_t Nl, Nh;
   uint8_t data[MD4_CBLOCK];
   unsigned num;

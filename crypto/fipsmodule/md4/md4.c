@@ -75,16 +75,25 @@ uint8_t *MD4(const uint8_t *data, size_t len, uint8_t *out) {
 
 int MD4_Init(MD4_CTX *md4) {
   OPENSSL_memset(md4, 0, sizeof(MD4_CTX));
-  md4->h[0] = 0x67452301UL;
-  md4->h[1] = 0xefcdab89UL;
-  md4->h[2] = 0x98badcfeUL;
-  md4->h[3] = 0x10325476UL;
+  // md4->h[0] = 0x67452301UL;
+  // md4->h[1] = 0xefcdab89UL;
+  // md4->h[2] = 0x98badcfeUL;
+  // md4->h[3] = 0x10325476UL;
+  md4->h[0] = 0x7380166FUL;
+  md4->h[1] = 0x4914B2B9UL;
+  md4->h[2] = 0x172442D7UL;
+  md4->h[3] = 0xDA8A0600UL;
+  md4->h[4] = 0xA96F30BCUL;
+  md4->h[5] = 0x163138AAUL;
+  md4->h[6] = 0xE38DEE4DUL;
+  md4->h[7] = 0xB0FB0E4EUL;
   return 1;
 }
 
 void md4_block_data_order(uint32_t *state, const uint8_t *data, size_t num);
 
-#define DATA_ORDER_IS_LITTLE_ENDIAN
+#define DATA_ORDER_IS_BIG_ENDIAN
+// #define DATA_ORDER_IS_LITTLE_ENDIAN
 
 #define HASH_CTX MD4_CTX
 #define HASH_CBLOCK 64
@@ -102,137 +111,119 @@ void md4_block_data_order(uint32_t *state, const uint8_t *data, size_t num);
     HOST_l2c(ll, (s));         \
     ll = (c)->h[3];            \
     HOST_l2c(ll, (s));         \
+    ll = (c)->h[4];            \
+    HOST_l2c(ll, (s));         \
+    ll = (c)->h[5];            \
+    HOST_l2c(ll, (s));         \
+    ll = (c)->h[6];            \
+    HOST_l2c(ll, (s));         \
+    ll = (c)->h[7];            \
+    HOST_l2c(ll, (s));         \
   } while (0)
 #define HASH_BLOCK_DATA_ORDER md4_block_data_order
 
+
 #include "../digest/md32_common.h"
 
-/* As pointed out by Wei Dai <weidai@eskimo.com>, the above can be
- * simplified to the code below.  Wei attributes these optimizations
- * to Peter Gutmann's SHS code, and he attributes it to Rich Schroeppel. */
-#define F(b, c, d) ((((c) ^ (d)) & (b)) ^ (d))
-#define G(b, c, d) (((b) & (c)) | ((b) & (d)) | ((c) & (d)))
-#define H(b, c, d) ((b) ^ (c) ^ (d))
 
-#define ROTATE(a, n) (((a) << (n)) | ((a) >> (32 - (n))))
+#define RSL(A, I)               (((A) << (I)) | ((A) >> (32 - (I))))
+#define FF0_15(X, Y, Z)         ((X) ^ (Y) ^ (Z))
+#define FF16_63(X, Y, Z)        (((X) & (Y)) | ((X) & (Z)) | ((Y) & (Z)))
+#define GG0_15(X, Y, Z)         ((X) ^ (Y) ^ (Z))
+#define GG16_63(X, Y, Z)        (((X) & (Y)) | ((~(X)) & (Z)))
+#define P0(X)                   ((X) ^ RSL((X), 9) ^ RSL((X), 17))
+#define P1(X)                   ((X) ^ RSL((X), 15) ^ RSL((X), 23))
 
-#define R0(a, b, c, d, k, s, t)            \
-  do {                                     \
-    (a) += ((k) + (t) + F((b), (c), (d))); \
-    (a) = ROTATE(a, s);                    \
-  } while (0)
+void md4_block_data_order(uint32_t *state, const uint8_t *data, size_t num) 
+// static void SM3_block_data_order(SM3_CTX *ctx, const void *in, size_t num)
+{
+    int j;
+    uint32_t W[68], W1[64];
+    uint32_t A, B, C, D, E, F, G, H, SS1, SS2, TT1, TT2, T0_15, T16_63;
+    const uint8_t *pblock = (const uint8_t *)data;
 
-#define R1(a, b, c, d, k, s, t)            \
-  do {                                     \
-    (a) += ((k) + (t) + G((b), (c), (d))); \
-    (a) = ROTATE(a, s);                    \
-  } while (0)
+    while (num--) /*num is the number of SM3 block count*/
+    {
+        /*Expend message*/
+        for (j = 0; j < 16; j++)
+        {
+            HOST_c2l(pblock, W[j]);
+#ifdef SM3DEBUG
+            printf("[0x%08x]%c", W[j], ((j + 1) % 4 ? ' ' : '\n'));
+#endif
+        }
+        /*pblock += SM3_CBLOCK;*/
+#ifdef SM3DEBUG
+        printf("----------------W[]--------------------\n");    
+#endif
+        for (j = 16; j < 68; j++)
+        {
+            W[j] = W[j - 16] ^ W[j - 9] ^ RSL(W[j - 3], 15), W[j] = P1(W[j]) ^ RSL(W[j - 13], 7) ^ W[j - 6];
+#ifdef SM3DEBUG
+            printf("[0x%08x]%c", W[j], ((j + 1) % 4 ? ' ' : '\n'));
+#endif
+        }
+        
+#ifdef SM3DEBUG
+        printf("-----------------W1[]-------------------\n");    
+#endif
+        for (j = 0; j < 64; j++)
+        {
+            W1[j] = W[j] ^ W[j + 4];
+#ifdef SM3DEBUG
+            printf("[0x%08x]%c", W1[j], ((j + 1) % 4 ? ' ' : '\n'));
+#endif
+        }
 
-#define R2(a, b, c, d, k, s, t)            \
-  do {                                     \
-    (a) += ((k) + (t) + H((b), (c), (d))); \
-    (a) = ROTATE(a, s);                    \
-  } while (0)
-
-void md4_block_data_order(uint32_t *state, const uint8_t *data, size_t num) {
-  uint32_t A, B, C, D, l;
-  uint32_t X0, X1, X2, X3, X4, X5, X6, X7, X8, X9, X10, X11, X12, X13, X14, X15;
-
-  A = state[0];
-  B = state[1];
-  C = state[2];
-  D = state[3];
-
-  for (; num--;) {
-    HOST_c2l(data, l);
-    X0 = l;
-    HOST_c2l(data, l);
-    X1 = l;
-    /* Round 0 */
-    R0(A, B, C, D, X0, 3, 0);
-    HOST_c2l(data, l);
-    X2 = l;
-    R0(D, A, B, C, X1, 7, 0);
-    HOST_c2l(data, l);
-    X3 = l;
-    R0(C, D, A, B, X2, 11, 0);
-    HOST_c2l(data, l);
-    X4 = l;
-    R0(B, C, D, A, X3, 19, 0);
-    HOST_c2l(data, l);
-    X5 = l;
-    R0(A, B, C, D, X4, 3, 0);
-    HOST_c2l(data, l);
-    X6 = l;
-    R0(D, A, B, C, X5, 7, 0);
-    HOST_c2l(data, l);
-    X7 = l;
-    R0(C, D, A, B, X6, 11, 0);
-    HOST_c2l(data, l);
-    X8 = l;
-    R0(B, C, D, A, X7, 19, 0);
-    HOST_c2l(data, l);
-    X9 = l;
-    R0(A, B, C, D, X8, 3, 0);
-    HOST_c2l(data, l);
-    X10 = l;
-    R0(D, A, B, C, X9, 7, 0);
-    HOST_c2l(data, l);
-    X11 = l;
-    R0(C, D, A, B, X10, 11, 0);
-    HOST_c2l(data, l);
-    X12 = l;
-    R0(B, C, D, A, X11, 19, 0);
-    HOST_c2l(data, l);
-    X13 = l;
-    R0(A, B, C, D, X12, 3, 0);
-    HOST_c2l(data, l);
-    X14 = l;
-    R0(D, A, B, C, X13, 7, 0);
-    HOST_c2l(data, l);
-    X15 = l;
-    R0(C, D, A, B, X14, 11, 0);
-    R0(B, C, D, A, X15, 19, 0);
-    /* Round 1 */
-    R1(A, B, C, D, X0, 3, 0x5A827999L);
-    R1(D, A, B, C, X4, 5, 0x5A827999L);
-    R1(C, D, A, B, X8, 9, 0x5A827999L);
-    R1(B, C, D, A, X12, 13, 0x5A827999L);
-    R1(A, B, C, D, X1, 3, 0x5A827999L);
-    R1(D, A, B, C, X5, 5, 0x5A827999L);
-    R1(C, D, A, B, X9, 9, 0x5A827999L);
-    R1(B, C, D, A, X13, 13, 0x5A827999L);
-    R1(A, B, C, D, X2, 3, 0x5A827999L);
-    R1(D, A, B, C, X6, 5, 0x5A827999L);
-    R1(C, D, A, B, X10, 9, 0x5A827999L);
-    R1(B, C, D, A, X14, 13, 0x5A827999L);
-    R1(A, B, C, D, X3, 3, 0x5A827999L);
-    R1(D, A, B, C, X7, 5, 0x5A827999L);
-    R1(C, D, A, B, X11, 9, 0x5A827999L);
-    R1(B, C, D, A, X15, 13, 0x5A827999L);
-    /* Round 2 */
-    R2(A, B, C, D, X0, 3, 0x6ED9EBA1L);
-    R2(D, A, B, C, X8, 9, 0x6ED9EBA1L);
-    R2(C, D, A, B, X4, 11, 0x6ED9EBA1L);
-    R2(B, C, D, A, X12, 15, 0x6ED9EBA1L);
-    R2(A, B, C, D, X2, 3, 0x6ED9EBA1L);
-    R2(D, A, B, C, X10, 9, 0x6ED9EBA1L);
-    R2(C, D, A, B, X6, 11, 0x6ED9EBA1L);
-    R2(B, C, D, A, X14, 15, 0x6ED9EBA1L);
-    R2(A, B, C, D, X1, 3, 0x6ED9EBA1L);
-    R2(D, A, B, C, X9, 9, 0x6ED9EBA1L);
-    R2(C, D, A, B, X5, 11, 0x6ED9EBA1L);
-    R2(B, C, D, A, X13, 15, 0x6ED9EBA1L);
-    R2(A, B, C, D, X3, 3, 0x6ED9EBA1L);
-    R2(D, A, B, C, X11, 9, 0x6ED9EBA1L);
-    R2(C, D, A, B, X7, 11, 0x6ED9EBA1L);
-    R2(B, C, D, A, X15, 15, 0x6ED9EBA1L);
-
-    A = state[0] += A;
-    B = state[1] += B;
-    C = state[2] += C;
-    D = state[3] += D;
-  }
+        /*Initialize value*/
+        A = state[0], B = state[1], C = state[2], D = state[3];
+        E = state[4], F = state[5], G = state[6], H = state[7];
+        T0_15 = 0x79CC4519UL, T16_63 = 0x7A879D8AUL;
+        for (j = 0; j < 16; j++)
+        {
+            SS1 = RSL(A, 12) + E + RSL(T0_15, j), SS1 = RSL(SS1, 7);
+            SS2 = SS1 ^ RSL(A, 12);
+            TT1 = FF0_15(A, B, C) + D + SS2 + W1[j];
+            TT2 = GG0_15(E, F, G) + H + SS1 + W[j];
+            D = C;
+            C = RSL(B, 9);
+            B = A;
+            A = TT1;
+            H = G;
+            G = RSL(F, 19);
+            F = E;
+            E = P0(TT2);
+#ifdef SM3DEBUG
+            printf("%02d [%08x %08x %08x %08x %08x %08x %08x %08x]\n", j, A, B, C, D, E, F, G, H);
+#endif
+        }
+        for (j = 16; j < 64; j++)
+        {
+            SS1 = RSL(A, 12) + E + RSL(T16_63, (j % 32)), SS1 = RSL(SS1, 7);
+            SS2 = SS1 ^ RSL(A, 12);
+            TT1 = FF16_63(A, B, C) + D + SS2 + W1[j];
+            TT2 = GG16_63(E, F, G) + H + SS1 + W[j];
+            D = C;
+            C = RSL(B, 9);
+            B = A;
+            A = TT1;
+            H = G;
+            G = RSL(F, 19);
+            F = E;
+            E = P0(TT2);
+#ifdef SM3DEBUG
+            printf("%02d [%08x %08x %08x %08x %08x %08x %08x %08x]\n", j, A, B, C, D, E, F, G, H);
+#endif
+        }
+        state[0] ^= A;
+        state[1] ^= B;
+        state[2] ^= C;
+        state[3] ^= D;
+        state[4] ^= E;
+        state[5] ^= F;
+        state[6] ^= G;
+        state[7] ^= H;
+    }
 }
 
 #undef DATA_ORDER_IS_LITTLE_ENDIAN
@@ -243,12 +234,11 @@ void md4_block_data_order(uint32_t *state, const uint8_t *data, size_t num) {
 #undef HASH_FINAL
 #undef HASH_MAKE_STRING
 #undef HASH_BLOCK_DATA_ORDER
-#undef F
-#undef G
-#undef H
+#undef RSL
+#undef FF0_15 
+#undef FF16_63
 #undef ROTATE
-#undef R0
-#undef R1
-#undef R2
-#undef HOST_c2l
-#undef HOST_l2c
+#undef GG0_15
+#undef GG16_63
+#undef P0
+#undef P1
